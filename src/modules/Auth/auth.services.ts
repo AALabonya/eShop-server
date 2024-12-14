@@ -1,13 +1,17 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import bcrypt from 'bcryptjs';
-
+import httpStatus from 'http-status';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
-import { createToken } from '../../utils/verifyJWT';
+import { createToken, verifyToken } from '../../utils/verifyJWT';
 import { TLoginUser } from './auth.interface';
 import AppError from '../../errors/appError';
 import { UserStatus } from '@prisma/client';
 import prisma from '../../utils/prisma';
-import { StatusCodes } from 'http-status-codes';
+import { IAuthUser } from '../Users/user.interface';
+import { sendEmail } from '../../utils/sendEmail';
 
 const loginUser = async (payload: TLoginUser) => {
   const userData = await prisma.user.findUnique({
@@ -18,7 +22,7 @@ const loginUser = async (payload: TLoginUser) => {
   });
 
   if (!userData) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'User not found!');
+    throw new AppError(httpStatus.BAD_REQUEST, 'User not found!');
   }
 
   //checking if the password is correct
@@ -28,7 +32,7 @@ const loginUser = async (payload: TLoginUser) => {
   );
 
   if (!isPasswordMatched) {
-    throw new AppError(StatusCodes.FORBIDDEN, 'Password do not matched');
+    throw new AppError(httpStatus.FORBIDDEN, 'Password do not matched');
   }
 
   //create token and sent to the  client
@@ -212,44 +216,130 @@ const refreshToken = async (token: string) => {
   };
 };
 
-// const forgetPassword = async (userEmail: string) => {
-//   const user = await User.isUserExistsByEmail(userEmail);
+const changePassword = async (
+  payload: {
+    oldPassword: string;
+    newPassword: string;
+  },
+  user: IAuthUser,
+) => {
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: user?.email,
+      status: UserStatus.ACTIVE,
+    },
+  });
 
-//   if (!user) {
-//     throw new AppError(httpStatus.NOT_FOUND, 'User does not exist!');
-//   }
+  if (!userData) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exists!");
+  }
 
-//   const jwtPayload = {
-//     _id: user._id,
-//     name: user.name,
-//     email: user.email,
-//     profilePhoto: user.profilePhoto,
-//     role: user.role,
-//     status: user.status,
-//     followers: user.followers,
-//     following: user.following,
-//     isVerified: user.isVerified,
-//     totalUpvote: user.totalUpvote,
-//     postCount: user.postCount,
-//     premiumStart: user.premiumStart,
-//     premiumEnd: user.premiumEnd,
-//   };
+  const isCorrectPassword: boolean = await bcrypt.compare(
+    payload.oldPassword,
+    userData.password,
+  );
 
-//   const resetToken = createToken(
-//     jwtPayload,
-//     config.jwt_access_secret as string,
-//     '20m',
-//   );
+  if (!isCorrectPassword) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Password incorrect!');
+  }
 
-//   const resetUILink = `${config.reset_pass_ui_link}?email=${user.email}&token=${resetToken} `;
+  const hashedPassword: string = await bcrypt.hash(
+    payload.newPassword,
+    Number(config.bcrypt_salt_rounds),
+  );
 
-//   sendEmail(user.email, resetUILink);
-// };
+  await prisma.user.update({
+    where: {
+      email: userData.email,
+    },
+    data: {
+      password: hashedPassword,
+    },
+  });
+
+  return {
+    message: 'Password changed successfully!',
+  };
+};
+
+const forgotPassword = async (payload: { email: string }) => {
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: payload?.email,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (!userData) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exist!");
+  }
+
+  const jwtPayload = {
+    id: userData.id,
+    email: userData.email,
+    role: userData.role,
+  };
+
+  const resetToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    '20m',
+  );
+
+  const resetUILink = `${config.reset_pass_ui_link}?email=${userData.email}&token=${resetToken} `;
+
+  await sendEmail(userData?.email, resetUILink);
+};
+
+const resetPassword = async (
+  payload: { email: string; newPassword: string },
+  token: string,
+) => {
+  console.log({ token, payload });
+
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (!userData) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exist!");
+  }
+
+  const decoded = verifyToken(
+    token,
+    config.jwt_access_secret as string,
+  ) as JwtPayload;
+
+  const { email } = decoded;
+
+  if (payload?.email !== email) {
+    throw new AppError(httpStatus.FORBIDDEN, 'You are forbidden!');
+  }
+  // hash password
+  const newHashedPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(config.bcrypt_salt_rounds),
+  );
+
+  // update into database
+  await prisma.user.update({
+    where: {
+      email: payload.email,
+    },
+    data: {
+      password: newHashedPassword,
+    },
+  });
+};
 
 export const AuthServices = {
   loginUser,
-  //   resetPassword,
+  changePassword,
   refreshToken,
   //   socialLogin,
-  //   forgetPassword,
+  forgotPassword,
+  resetPassword,
 };
