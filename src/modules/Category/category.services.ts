@@ -1,0 +1,108 @@
+import prisma from '../../utils/prisma';
+import AppError from '../../errors/appError';
+import { StatusCodes } from 'http-status-codes';
+
+
+// const createCategory = async (payload: { category: string; image: string }) => {
+//   const isCategoryExists = await prisma.category.findUnique({
+//     where: {
+//       name: payload.category,
+//     },
+//   });
+
+//   if (isCategoryExists) {
+//     throw new AppError(StatusCodes.BAD_REQUEST, 'Category already exists!');
+//   }
+
+//   const result = await prisma.category.create({
+//     data: {
+//       name: payload.category,
+//       image: payload.image,
+//     },
+//   });
+
+//   return result;
+// };
+const createCategory = async (payload: { category: string; image: string; label?: string }) => {
+  const isCategoryExists = await prisma.category.findUnique({
+    where: {
+      name: payload.category,
+    },
+  });
+
+  if (isCategoryExists) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Category already exists!');
+  }
+
+  const result = await prisma.category.create({
+    data: {
+      name: payload.category,
+      label: payload.category,
+      image: payload.image,
+    },
+  });
+
+  return result;
+};
+const getAllCategories = async () => {
+  const categories = await prisma.category.findMany();
+  return categories;
+};
+
+const updateCategory = async (
+  categoryId: string,
+  payload: { category?: string; image?: string },
+) => {
+  const isCategoryExists = await prisma.category.findUnique({
+    where: { id: categoryId },
+  });
+
+  if (!isCategoryExists) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Category not found!');
+  }
+
+  const updatedCategory = await prisma.category.update({
+    where: { id: categoryId },
+    data: {
+      ...(payload.category && { name: payload.category }),
+      ...(payload.image && { image: payload.image }),
+    },
+  });
+
+  return updatedCategory;
+};
+
+const deleteCategory = async (categoryId: string) => {
+  const isCategoryExists = await prisma.category.findUnique({
+    where: { id: categoryId },
+  });
+
+  if (!isCategoryExists) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Category not found!');
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.product.updateMany({
+      where: { categoryId },
+      data: { categoryId: null },
+    });
+
+    const deletedCategory = await tx.category.update({
+      where: { id: categoryId },
+      data: {
+        isDeleted: true,
+      },
+    });
+
+    return deletedCategory;
+  });
+
+  return result;
+};
+
+export const CategoryServices = {
+  createCategory,
+  getAllCategories,
+  updateCategory,
+  deleteCategory,
+};

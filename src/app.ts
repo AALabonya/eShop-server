@@ -1,37 +1,40 @@
-import cookieParser from 'cookie-parser';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import express, { Application, NextFunction, Request, Response } from 'express';
+import router from './routes';
+import globalErrorHandler from './middlewares/globalErrorHandler';
+import notFound from './middlewares/notFound';
+import cookieParser from 'cookie-parser';
 import { StatusCodes } from 'http-status-codes';
-import globalErrorHandler from './app/middlewares/globalErrorHandler';
-import router from './app/routes';
 
 const app: Application = express();
-app.use(cors());
+
+app.use(
+  cors({
+    origin: ['http://localhost:3000','http://localhost:3001'], // Allow requests from this origin
+    credentials: true, // Allow cookies and other credentials
+  }),
+);
 app.use(cookieParser());
 
 //parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req: Request, res: Response) => {
-    res.send({
-        Message: "Ecommerce Backend Running.."
-    })
-});
-
+// router
 app.use('/api', router);
 
+//Testing
+app.get('/', (req: Request, res: Response) => {
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Welcome to eShop Server!',
+  });
+});
+
+//global error handler
 app.use(globalErrorHandler);
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-    res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        message: "API NOT FOUND!",
-        error: {
-            path: req.originalUrl,
-            message: "Your requested path is not found!"
-        }
-    })
-})
+//handle non-existing route
+app.use(notFound);
 
 export default app;

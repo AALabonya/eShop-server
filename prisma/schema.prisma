@@ -1,28 +1,34 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
+
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  VENDOR
+  CUSTOMER
+}
+
+
+
 
 model User {
   id                 String     @id @default(uuid())
   email              String     @unique
   password           String
   role               UserRole
-  needPasswordChange Boolean    @default(true)
   status             UserStatus @default(ACTIVE)
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   admin              Admin?
+  vendor             Vendor?
+  customer           Customer?
 
   @@map("users")
 }
@@ -31,8 +37,7 @@ model Admin {
   id            String   @id @default(uuid())
   name          String
   email         String   @unique
-  profilePhoto  String?
-  contactNumber String
+  image          String?
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -42,19 +47,183 @@ model Admin {
   @@map("admins")
 }
 
-enum UserRole {
-  ADMIN
-  DOCTOR
-  PATIENT
+
+model Customer {
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  image             String?
+  address           String?
+  phone             String? 
+  isDeleted         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  orders            Order[]
+  reviews           Review[]
+  following          Follow[]
+  customerCoupons   CustomerCoupon[]
+  recentProductView RecentProductView[]
+  user User @relation(fields: [email], references: [email])
+
+  @@map("customers")
+}
+model Vendor {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  shopName      String?
+  logo          String?
+  description   String?
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  products      Product[]
+  orders        Order[]
+  followers     Follow[]
+
+  user User @relation(fields: [email], references: [email])
+
+  @@map("vendors")
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  name           String
+  image          String[]
+  price          Float
+  stockQuantity  Int
+  description    String
+  flashSale      Boolean?  @default(false)
+  discount       Float?    @default(0)
+  isDeleted      Boolean   @default(false)
+  categoryId     String?
+  vendorId       String
+  orderDetails   OrderDetail[]
+  reviews        Review[]
+  recentProductView RecentProductView[]
+
+  category       Category?  @relation(fields: [categoryId], references: [id])
+  vendor         Vendor    @relation(fields: [vendorId], references: [id])
+
+  @@map("products")
+}
+
+model Category {
+  id             String   @id @default(uuid())
+  label          String
+  name           String    @unique
+  image          String
+  isDeleted      Boolean   @default(false)
+  products       Product[]
+
+  @@map("categories")
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  customerId    String
+  vendorId      String
+  deliveryAddress String?
+  totalPrice    Float
+  paymentStatus PaymentStatus
+  transactionId String        @unique
+  orderDetails  OrderDetail[]
+  
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  vendor        Vendor        @relation(fields: [vendorId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderDetail {
+  id         String   @id @default(uuid())
+  orderId     String
+  productId   String
+  quantity    Int
+  pricePerUnit Float
+
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@map("orderDetails")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  UNPAID
+ 
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  productId   String
+  customerId  String
+  rating      Int
+  comment     String?
+
+  product     Product   @relation(fields: [productId], references: [id])
+  customer    Customer  @relation(fields: [customerId], references: [id])
+
+  @@map("reviews")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  customerId  String
+  vendorId    String
+
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+
+  @@unique([customerId, vendorId])
+  @@map("followers")
+}
+
+model RecentProductView {
+  id          String   @id @default(uuid())
+  customerId  String
+  productId   String
+  viewedAt    DateTime  @default(now())
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id])
+}
+
+model Coupon {
+  id             String      @id @default(uuid())
+  code           String      @unique
+  discountValue  Float       
+  startDate      DateTime    @default(now())
+  endDate        DateTime
+  usedCount      Int         @default(0) 
+  isActive       Boolean     @default(true)
+  discountStatus DiscountStatus
+  customerCoupons CustomerCoupon[]
+
+  @@map("coupons")
+}
+
+model CustomerCoupon {
+  id             String      @id @default(uuid())
+  customerId     String
+  couponId       String
+  redeemedAt     DateTime?   
+  isRedeemed     Boolean     @default(false)
+
+  coupon         Coupon      @relation(fields: [couponId], references: [id])
+  customer       Customer    @relation(fields: [customerId], references: [id])
+ 
+  @@unique([customerId, couponId]) 
+  @@map("customerCoupons")
+}
+
+enum DiscountStatus {
+  PERCENTAGE
+  FIXED
 }
 
 enum UserStatus {
   ACTIVE
   BLOCKED
   DELETED
-}
-
-enum PaymentStatus {
-  PAID
-  UNPAID
 }
