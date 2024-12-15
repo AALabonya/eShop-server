@@ -44,5 +44,4 @@ eShop is your one-stop online platform for all essential products. We aim to del
 - **Authentication:** JWT-based user authentication
 - **File Storage:** Cloudinary integration for product images
 - **Payment Gateway:** Aamarpay
-- **Code Quality:** Eslint, Prettier
 
