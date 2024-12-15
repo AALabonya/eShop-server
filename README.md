@@ -37,3 +37,12 @@ eShop is your one-stop online platform for all essential products. We aim to del
 
 - Leave reviews and ratings for purchased products.
 
+## Technologies
+
+- **Backend:** Node.js, Express.js, TypeScript
+- **Database:** PostgreSQL with Prisma ORM
+- **Authentication:** JWT-based user authentication
+- **File Storage:** Cloudinary integration for product images
+- **Payment Gateway:** Aamarpay
+- **Code Quality:** Eslint, Prettier
+
