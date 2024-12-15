@@ -17,3 +17,11 @@ eShop is your one-stop online platform for all essential products. We aim to del
 
 - Manage platform content, including vendor shops and product categories.
 
+### Vendor Features
+
+
+- Create and manage shop profiles, products, and inventory.
+
+- View order history and respond to customer reviews.
+
+
