@@ -10,20 +10,20 @@ const app: Application = express();
 
 app.use(
   cors({
-    origin: ['http://localhost:3000','http://localhost:3001'], // Allow requests from this origin
-    credentials: true, // Allow cookies and other credentials
+    origin: ['http://localhost:3000','http://localhost:3001'], 
+    credentials: true, 
   }),
 );
 app.use(cookieParser());
 
-//parser
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// router
+
 app.use('/api', router);
 
-//Testing
+
 app.get('/', (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({
     success: true,
@@ -31,10 +31,10 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-//global error handler
+
 app.use(globalErrorHandler);
 
-//handle non-existing route
+
 app.use(notFound);
 
 export default app;
