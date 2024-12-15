@@ -64,6 +64,7 @@ const updateProduct = catchAsync(async (req: Request, res: Response)  => {
   const { productId } = req.params;
 
   const result = await ProductServices.updateProduct(productId, req.files,req.body, );
+// console.log(result);
 
   sendResponse(res, {
     success: true,

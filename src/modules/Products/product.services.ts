@@ -320,6 +320,7 @@ const createProduct = async (payload: TProducts, user: IAuthUser,files: any,) =>
   const image = files?.image
   ? files?.image.map((file: { path: any }) => file.path)
   : [];
+
   const productInfo = {
     ...payload,
     vendorId: vendor.id,
@@ -501,6 +502,10 @@ const getProductById = async (productId: string) => {
 //   const image = files?.image
 //   ? files?.image.map((file: { path: any }) => file.path)
 //   : [];
+// ;
+// if(image){
+//   updateData.image = image
+// }
 //   const updatedProduct = await prisma.product.update({
 //     where: {
 //       id: productId,
@@ -512,36 +517,49 @@ const getProductById = async (productId: string) => {
 //       reviews: true,
 //     },
 //   });
+// console.log(updatedProduct,"Choice");
 
 //   return updatedProduct;
 // };
-
-
 const updateProduct = async (
   productId: string,
   files: any,
-  updateData: Prisma.ProductUpdateInput
+  updateData: Prisma.ProductUpdateInput,
 ) => {
-  // Get the new image file(s) (image field is an array of strings)
-  const newImageFile = files?.image ? files.image.map((file: { path: string }) => file.path) : [];
-console.log(newImageFile);
-
-  // Check if the product exists
+  // Ensure the product exists
   const existingProduct = await prisma.product.findUniqueOrThrow({
     where: { id: productId },
   });
 
-  // Merge the new image(s) into the update data (if provided)
-  if (newImageFile.length > 0) {
-    updateData.image = newImageFile;
+  // Handle images if provided
+  const image = files?.image
+    ? files?.image.map((file: { path: any }) => file.path)
+    : [];
+
+  if (image.length > 0) {
+    updateData.image = image;
   }
 
-  // Update the product using the provided data
+  // Check if categoryId is new or same as existing
+  if (updateData.category === existingProduct.categoryId) {
+    // If categoryId is the same, remove it to avoid update
+    delete updateData.category;
+  }
+
+  // Update the product
   const updatedProduct = await prisma.product.update({
-    where: { id: productId },
+    where: {
+      id: productId,
+    },
     data: updateData,
+    include: {
+      category: true,
+      vendor: true,
+      reviews: true,
+    },
   });
-// console.log(updatedProduct);
+
+  console.log(updatedProduct, "Updated Product");
 
   return updatedProduct;
 };
