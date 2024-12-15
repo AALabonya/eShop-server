@@ -491,25 +491,57 @@ const getProductById = async (productId: string) => {
   return product;
 };
 
+// const updateProduct = async (
+//   productId: string,files: any,
+//   updateData: Prisma.ProductUpdateInput,
+// ) => {
+//   await prisma.product.findUniqueOrThrow({
+//     where: { id: productId },
+//   });
+//   const image = files?.image
+//   ? files?.image.map((file: { path: any }) => file.path)
+//   : [];
+//   const updatedProduct = await prisma.product.update({
+//     where: {
+//       id: productId,
+//     },
+//     data: updateData,
+//     include: {
+//       category: true,
+//       vendor: true,
+//       reviews: true,
+//     },
+//   });
+
+//   return updatedProduct;
+// };
+
+
 const updateProduct = async (
   productId: string,
-  updateData: Prisma.ProductUpdateInput,
+  files: any,
+  updateData: Prisma.ProductUpdateInput
 ) => {
-  await prisma.product.findUniqueOrThrow({
+  // Get the new image file(s) (image field is an array of strings)
+  const newImageFile = files?.image ? files.image.map((file: { path: string }) => file.path) : [];
+console.log(newImageFile);
+
+  // Check if the product exists
+  const existingProduct = await prisma.product.findUniqueOrThrow({
     where: { id: productId },
   });
 
+  // Merge the new image(s) into the update data (if provided)
+  if (newImageFile.length > 0) {
+    updateData.image = newImageFile;
+  }
+
+  // Update the product using the provided data
   const updatedProduct = await prisma.product.update({
-    where: {
-      id: productId,
-    },
+    where: { id: productId },
     data: updateData,
-    include: {
-      category: true,
-      vendor: true,
-      reviews: true,
-    },
   });
+// console.log(updatedProduct);
 
   return updatedProduct;
 };

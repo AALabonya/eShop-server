@@ -6,6 +6,7 @@ import { ProductServices } from './product.services';
 import pick from '../../utils/pick';
 import { productFilterableFields } from './product.constant';
 import { StatusCodes } from 'http-status-codes';
+import { Request, Response } from 'express';
 
 const createProduct = catchAsync(async (req, res) => {
   const result = await ProductServices.createProduct(
@@ -59,10 +60,10 @@ const getSingleProduct = catchAsync(async (req, res) => {
   });
 });
 
-const updateProduct = catchAsync(async (req, res) => {
+const updateProduct = catchAsync(async (req: Request, res: Response)  => {
   const { productId } = req.params;
 
-  const result = await ProductServices.updateProduct(productId, req.body);
+  const result = await ProductServices.updateProduct(productId, req.files,req.body, );
 
   sendResponse(res, {
     success: true,

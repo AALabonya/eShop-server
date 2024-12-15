@@ -161,6 +161,7 @@ const unfollowVendor = catchAsync(async (req, res) => {
 const updateVendor = catchAsync(async (req, res) => {
   const result = await userService.updateVendor(
     req.body,
+    req.files, 
     req.user as IAuthUser,
   );
 
@@ -172,10 +173,12 @@ const updateVendor = catchAsync(async (req, res) => {
   });
 });
 
-const updateCustomer = catchAsync(async (req: Request , res:Response) => {
+const updateCustomer = catchAsync(async (req: Request , res:Response,) => {
+  // console.log( req.user);
+
   const result = await userService.updateCustomer(
     req.body,
-    req as any,    
+    req.files,    
     req.user as IAuthUser,
   );
 

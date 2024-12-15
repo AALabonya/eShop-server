@@ -4,7 +4,8 @@ import validateRequest from '../../middlewares/validateRequest';
 import { userValidation } from './user.validation';
 import auth from '../../middlewares/auth';
 import { UserRole } from '@prisma/client';
-import { fileUploader } from '../../utils/fileUploader';
+import { upload } from '../../config/multer.config';
+
 
 const router = express.Router();
 
@@ -76,19 +77,22 @@ router.delete(
 router.patch(
   '/update-customer',
   auth(UserRole.CUSTOMER),
-  fileUploader.upload.single('image'),
-  (req: Request, res: Response, next: NextFunction) => {
-      req.body = JSON.parse(req.body.data)
-      console.log(req.body.image);
-      
-      return userController.updateCustomer(req, res, next)
-  }
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  
+     userController.updateCustomer
+ 
   
 );
 
 router.patch(
   '/update-vendor',
-  auth(UserRole.VENDOR),
+  auth(UserRole.VENDOR),upload.fields([{ name: "image", maxCount: 1 }]),
+  (req: Request, res: Response, next: NextFunction) => {
+    if (req.body.data) {
+        req.body = JSON.parse(req.body.data);
+    }
+    next();
+},
   userController.updateVendor,
 );
 // router.patch(

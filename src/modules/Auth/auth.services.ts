@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import bcrypt from 'bcryptjs';
-import httpStatus from 'http-status';
+
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../../config';
 import { createToken, verifyToken } from '../../utils/verifyJWT';
@@ -11,7 +11,9 @@ import AppError from '../../errors/appError';
 import { UserStatus } from '@prisma/client';
 import prisma from '../../utils/prisma';
 import { IAuthUser } from '../Users/user.interface';
+import { StatusCodes } from 'http-status-codes';
 import { sendEmail } from '../../utils/sendEmail';
+
 
 const loginUser = async (payload: TLoginUser) => {
   const userData = await prisma.user.findUnique({
@@ -22,7 +24,7 @@ const loginUser = async (payload: TLoginUser) => {
   });
 
   if (!userData) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'User not found!');
+    throw new AppError(StatusCodes.BAD_REQUEST, 'User not found!');
   }
 
   //checking if the password is correct
@@ -32,7 +34,7 @@ const loginUser = async (payload: TLoginUser) => {
   );
 
   if (!isPasswordMatched) {
-    throw new AppError(httpStatus.FORBIDDEN, 'Password do not matched');
+    throw new AppError(StatusCodes.FORBIDDEN, 'Password do not matched');
   }
 
   //create token and sent to the  client
@@ -60,130 +62,9 @@ const loginUser = async (payload: TLoginUser) => {
   };
 };
 
-// const socialLogin = async (payload: TSocialLoginUser) => {
-//   const user = await User.isUserExistsByEmail(payload?.email);
-
-//   if (!user) {
-//     payload.role = USER_ROLE.USER;
-
-//     // create new user
-
-//     const newUser = await User.create(payload);
-
-//     //create token and sent to the  client
-
-//     const jwtPayload = {
-//       _id: newUser._id,
-//       name: newUser.name,
-//       email: newUser.email,
-//       profilePhoto: newUser.profilePhoto,
-//       role: newUser.role,
-//       status: newUser.status,
-//       followers: newUser.followers,
-//       following: newUser.following,
-//       isVerified: newUser.isVerified,
-//       totalUpvote: newUser.totalUpvote,
-//       postCount: newUser.postCount,
-//       premiumStart: newUser.premiumStart,
-//       premiumEnd: newUser.premiumEnd,
-//     };
-
-//     const accessToken = createToken(
-//       jwtPayload,
-//       config.jwt_access_secret as string,
-//       config.jwt_access_expires_in as string,
-//     );
-
-//     const refreshToken = createToken(
-//       jwtPayload,
-//       config.jwt_refresh_secret as string,
-//       config.jwt_refresh_expires_in as string,
-//     );
-
-//     return {
-//       accessToken,
-//       refreshToken,
-//     };
-//   }
-
-//   //create token and sent to the  client
-
-//   const jwtPayload = {
-//     _id: user._id,
-//     name: user.name,
-//     email: user.email,
-//     profilePhoto: user.profilePhoto,
-//     role: user.role,
-//     status: user.status,
-//     followers: user.followers,
-//     following: user.following,
-//     isVerified: user.isVerified,
-//     totalUpvote: user.totalUpvote,
-//     postCount: user.postCount,
-//     premiumStart: user.premiumStart,
-//     premiumEnd: user.premiumEnd,
-//   };
-
-//   const accessToken = createToken(
-//     jwtPayload,
-//     config.jwt_access_secret as string,
-//     config.jwt_access_expires_in as string,
-//   );
-
-//   const refreshToken = createToken(
-//     jwtPayload,
-//     config.jwt_refresh_secret as string,
-//     config.jwt_refresh_expires_in as string,
-//   );
-
-//   return {
-//     accessToken,
-//     refreshToken,
-//   };
-// };
-
-// const resetPassword = async (
-//   payload: { email: string; newPassword: string },
-//   token: string,
-// ) => {
-//   // checking if the user is exist
-//   const user = await User.isUserExistsByEmail(payload.email);
-
-//   if (!user) {
-//     throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
-//   }
-
-//   const decoded = jwt.verify(
-//     token,
-//     config.jwt_access_secret as string,
-//   ) as JwtPayload;
-
-//   if (payload.email !== decoded.email) {
-//     throw new AppError(httpStatus.FORBIDDEN, 'You are forbidden!');
-//   }
-
-//   //hash new password
-//   const newHashedPassword = await bcrypt.hash(
-//     payload.newPassword,
-//     Number(config.bcrypt_salt_rounds),
-//   );
-
-//   await User.findOneAndUpdate(
-//     {
-//       email: decoded.email,
-//       role: decoded.role,
-//     },
-//     {
-//       password: newHashedPassword,
-//       passwordChangedAt: new Date(),
-//     },
-//   );
-
-//   return null;
-// };
 
 const refreshToken = async (token: string) => {
-  // checking if the given token is valid
+
   const decoded = jwt.verify(
     token,
     config.jwt_refresh_secret as string,
@@ -191,7 +72,7 @@ const refreshToken = async (token: string) => {
 
   const { email } = decoded;
 
-  // checking if the user is exist
+
   const userData = await prisma.user.findUniqueOrThrow({
     where: {
       email: email,
@@ -231,7 +112,7 @@ const changePassword = async (
   });
 
   if (!userData) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exists!");
+    throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exists!");
   }
 
   const isCorrectPassword: boolean = await bcrypt.compare(
@@ -240,7 +121,7 @@ const changePassword = async (
   );
 
   if (!isCorrectPassword) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Password incorrect!');
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Password incorrect!');
   }
 
   const hashedPassword: string = await bcrypt.hash(
@@ -271,7 +152,7 @@ const forgotPassword = async (payload: { email: string }) => {
   });
 
   if (!userData) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exist!");
+    throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
   const jwtPayload = {
@@ -279,6 +160,7 @@ const forgotPassword = async (payload: { email: string }) => {
     email: userData.email,
     role: userData.role,
   };
+  console.log(userData.email);
 
   const resetToken = createToken(
     jwtPayload,
@@ -305,7 +187,7 @@ const resetPassword = async (
   });
 
   if (!userData) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exist!");
+    throw new AppError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
   const decoded = verifyToken(
@@ -316,7 +198,7 @@ const resetPassword = async (
   const { email } = decoded;
 
   if (payload?.email !== email) {
-    throw new AppError(httpStatus.FORBIDDEN, 'You are forbidden!');
+    throw new AppError(StatusCodes.FORBIDDEN, 'You are forbidden!');
   }
   // hash password
   const newHashedPassword = await bcrypt.hash(
@@ -339,7 +221,6 @@ export const AuthServices = {
   loginUser,
   changePassword,
   refreshToken,
-  //   socialLogin,
   forgotPassword,
   resetPassword,
 };

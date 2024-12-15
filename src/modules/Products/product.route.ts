@@ -16,7 +16,7 @@ router.post(
     if (req.body.data) {
         req.body = JSON.parse(req.body.data);
     }
-    console.log(req.body);
+    // console.log(req.body);
     
     next();
 },
@@ -37,7 +37,15 @@ router.get(
 );
 
 router.patch(
-  '/:productId',
+  '/:productId',upload.fields([
+    { name: "image", maxCount: 10 },
+]),(req: Request, res: Response, next: NextFunction) => {
+  if (req.body.data) {
+      req.body = JSON.parse(req.body.data);
+  }
+  
+  next();
+},
   auth(UserRole.VENDOR),
   validateRequest(ProductValidation.updateProductValidation),
   ProductController.updateProduct,

@@ -32,7 +32,7 @@ const getAllReviews = catchAsync(async (req, res) => {
     {} as Record<string, string>,
   );
 
-  const result = await ReviewServices.getReviewsByProductId(query);
+  const result = await ReviewServices.getAllReviews(query);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

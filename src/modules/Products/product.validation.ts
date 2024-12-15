@@ -33,7 +33,6 @@ const createProductValidation = z.object({
 const updateProductValidation = z.object({
   body: z.object({
     name: z.string().optional(),
-    image: z.array(z.string()).optional(),
     price: z
       .number()
       .nonnegative('Price must be a non-negative number')

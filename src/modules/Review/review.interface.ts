@@ -1,6 +1,6 @@
 export type TReview = {
-    productId: string;
-    rating: number;
-    comment: string;
-
-  };
+  productId: string;
+  rating: number;
+  comment: string;
+  vendorId: string;
+};

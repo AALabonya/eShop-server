@@ -399,7 +399,7 @@ const updateCustomer = async (
     image?: string;
     address?: string;
     phone?: string;
-  },req: Request, 
+  },files: any, 
   userData: IAuthUser,
 ) => {
   const customer = await prisma.customer.findUnique({
@@ -408,18 +408,17 @@ const updateCustomer = async (
       isDeleted: false,
     },
   });
-  const file = (req as any).file;  
-  console.log(file);
+
   // Use `any` to avoid TypeScript error
-  if (file) {
-    const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-    payload.image = uploadToCloudinary?.secure_url; 
-  }
-  console.log(file);
+  const image = files?.image?.[0]?.path || "";
+
   if (!customer) {
     throw new AppError(StatusCodes.NOT_FOUND, "User doesn't exist!");
   }
 
+  if(image){
+    payload.image = image
+  }
   const result = await prisma.customer.update({
     where: {
       email: customer.email,
@@ -442,7 +441,7 @@ const updateVendor = async (
     shopName?: string;
     logo?: string;
     description?: string;
-  },
+  },files: any, 
   userData: IAuthUser,
 ) => {
   const vendor = await prisma.vendor.findUnique({
@@ -451,11 +450,16 @@ const updateVendor = async (
       isDeleted: false,
     },
   });
-
+ 
   if (!vendor) {
     throw new AppError(StatusCodes.NOT_FOUND, "User doesn't exist!");
   }
-
+  const image = files?.image?.[0]?.path || "";
+  if(image){
+    payload.logo = image
+  }
+  // console.log(payload,"jjj");
+  
   const result = await prisma.vendor.update({
     where: {
       email: vendor.email,
@@ -467,6 +471,7 @@ const updateVendor = async (
       followers: true,
     },
   });
+// console.log(result);
 
   return result;
 };
