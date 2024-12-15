@@ -25,3 +25,15 @@ eShop is your one-stop online platform for all essential products. We aim to del
 - View order history and respond to customer reviews.
 
 
+### Customer Features
+
+- Browse, filter, and compare products from multiple vendors.
+
+- Add items to the cart, purchase products, and leave reviews for purchased items.
+
+- Integrate with payment systems like Aamarpay for secure transactions.
+
+- Access order history to review past purchases.
+
+- Leave reviews and ratings for purchased products.
+
