@@ -514,8 +514,87 @@ const getAllFromDB = async (filters: any, options: any) => {
     },
   };
 };
+export const updateUserStatus = async (userId: string, status: UserStatus) => {
+  // Check if the user exists
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+// console.log(status,"status");
+
+  // If user does not exist, throw an error
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { status: 'BLOCKED' },
+  });
+  
+  if (updatedUser.status !== 'BLOCKED') {
+    console.error("User status update failed");
+  }
+  
+
+  return updatedUser;  // Return the updated user object
+};
 
 
+export const deleteUser = async (userId: string) => {
+  if (!userId) {
+    throw new Error("User ID is required.");
+  }
+
+  // First, find the user and their related admin, customer, or vendor based on the userId
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      admin: true,
+      customer: true,
+      vendor: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  let updatedUser;
+
+  // If the user has an associated admin, update isDeleted to true
+  if (user.admin) {
+    updatedUser = await prisma.admin.update({
+      where: { id: user.admin.id },
+      data: {
+        isDeleted: true,
+      },
+    });
+  } else if (user.customer) {
+    // If the user has an associated customer, update isDeleted to true
+    updatedUser = await prisma.customer.update({
+      where: { id: user.customer.id },
+      data: {
+        isDeleted: true,
+      },
+    });
+  } else if (user.vendor) {
+    // If the user has an associated vendor, update isDeleted to true
+    updatedUser = await prisma.vendor.update({
+      where: { id: user.vendor.id },
+      data: {
+        isDeleted: true,
+      },
+    });
+  }
+
+  // Update the status to 'DELETED' in the User table instead of deleting the user
+  await prisma.user.update({
+    where: { id: userId },
+    data: { status: 'DELETED' },
+  });
+
+  return { message: 'User and their associated data marked as deleted successfully', user: updatedUser };
+};
 
 export const userService = {
   createAdmin,
@@ -528,5 +607,7 @@ export const userService = {
   unfollowVendor,
   updateCustomer,
   updateVendor,
-  getAllFromDB, // Export the getAllUsers function
+  getAllFromDB, 
+  updateUserStatus,
+  deleteUser
 };

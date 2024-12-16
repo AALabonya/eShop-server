@@ -84,17 +84,20 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// const changeProfileStatus = catchAsync(async (req: Request, res: Response) => {
-//   const { id } = req.params;
-//   const result = await userService.changeProfileStatus(id, req.body);
+const changeupdateUserStatus = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  // console.log(req.body,"body");
+  
+  const result = await userService.updateUserStatus(id, req.body);
 
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'Users profile status changed!',
-//     data: result,
-//   });
-// });
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Users profile status changed!',
+    data: result,
+  });
+});
 
 const getMyProfile = catchAsync(async (req, res) => {
   const result = await userService.getMyProfile(req.user as IAuthUser);
@@ -191,13 +194,25 @@ const updateCustomer = catchAsync(async (req: Request , res:Response,) => {
     data: result,
   });
 });
+const deleteUser = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+console.log(userId);
 
+  const result = await userService.deleteUser(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Product successfully deleted!',
+    data: result,
+  });
+});
 export const userController = {
   createAdmin,
   createVendor,
   createCustomer,
   //   getAllFromDB,
-  //   changeProfileStatus,
+  changeupdateUserStatus,
   getMyProfile,
   getVendorUser,
   getCustomerUser,
@@ -205,6 +220,7 @@ export const userController = {
   unfollowVendor,
   updateCustomer,
   updateVendor,
-  getAllFromDB
+  getAllFromDB,
+  deleteUser
 };
 

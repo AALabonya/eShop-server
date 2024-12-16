@@ -99,7 +99,7 @@ router.patch(
   '/:id/status',
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   validateRequest(userValidation.updateStatus),
-  userController.changeProfileStatus,
+  userController.changeupdateUserStatus,
 );
 
 // router.patch(
@@ -111,5 +111,11 @@ router.patch(
 //     return userController.updateMyProfie(req, res, next);
 //   },
 // );
+router.delete(
+  '/:userId',
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  userController.deleteUser,
+);
+
 
 export const UserRoutes = router;
