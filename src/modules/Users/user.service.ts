@@ -10,7 +10,9 @@ import { StatusCodes } from 'http-status-codes';
 import { log } from 'node:console';
 import { loadavg } from 'node:os';
 
-
+interface SoftDeleteVendorParams {
+  vendorId: string;
+}
 const createAdmin = async (payload: {
   name: string;
   password: string;
@@ -548,11 +550,6 @@ export const deleteUser = async (userId: string) => {
   // First, find the user and their related admin, customer, or vendor based on the userId
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: {
-      admin: true,
-      customer: true,
-      vendor: true,
-    },
   });
 
   if (!user) {
@@ -561,32 +558,6 @@ export const deleteUser = async (userId: string) => {
 
   let updatedUser;
 
-  // If the user has an associated admin, update isDeleted to true
-  if (user.admin) {
-    updatedUser = await prisma.admin.update({
-      where: { id: user.admin.id },
-      data: {
-        isDeleted: true,
-      },
-    });
-  } else if (user.customer) {
-    // If the user has an associated customer, update isDeleted to true
-    updatedUser = await prisma.customer.update({
-      where: { id: user.customer.id },
-      data: {
-        isDeleted: true,
-      },
-    });
-  } else if (user.vendor) {
-    // If the user has an associated vendor, update isDeleted to true
-    updatedUser = await prisma.vendor.update({
-      where: { id: user.vendor.id },
-      data: {
-        isDeleted: true,
-      },
-    });
-  }
-
   // Update the status to 'DELETED' in the User table instead of deleting the user
   await prisma.user.update({
     where: { id: userId },
@@ -594,6 +565,37 @@ export const deleteUser = async (userId: string) => {
   });
 
   return { message: 'User and their associated data marked as deleted successfully', user: updatedUser };
+};
+
+const updateVendorStatus = async (vendorId: string, isDeleted: boolean) => {
+
+  
+  try {
+
+    const vendor = await prisma.vendor.findUnique({
+      where: { id: vendorId },
+    });
+
+
+    if (!vendor) {
+      throw new Error("Vendor not found");
+    }
+
+    
+    const updatedVendor = await prisma.vendor.update({
+      where: { id: vendorId },
+      data: { isDeleted },  
+    });
+
+    // Check if the update was successful
+    if (updatedVendor.isDeleted !== isDeleted) {
+      console.error("Vendor status update failed");
+    }
+
+    return updatedVendor; 
+  } catch (error) {
+    throw error; 
+  }
 };
 
 export const userService = {
@@ -609,5 +611,6 @@ export const userService = {
   updateVendor,
   getAllFromDB, 
   updateUserStatus,
-  deleteUser
+  deleteUser,
+  updateVendorStatus
 };

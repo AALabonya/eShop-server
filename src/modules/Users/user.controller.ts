@@ -123,6 +123,8 @@ const getVendorUser = catchAsync(async (req, res) => {
   });
 });
 
+
+
 const getCustomerUser = catchAsync(async (req, res) => {
   const { email } = req.params;
 
@@ -196,7 +198,7 @@ const updateCustomer = catchAsync(async (req: Request , res:Response,) => {
 });
 const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params;
-console.log(userId);
+// console.log(userId);
 
   const result = await userService.deleteUser(userId);
 
@@ -207,7 +209,29 @@ console.log(userId);
     data: result,
   });
 });
+
+const updateVendorStatus = catchAsync(async (req, res) => {
+  const { vendorId } = req.params; // Extract vendorId from URL
+  const { isDeleted } = req.body; // Extract isDeleted from body
+  
+  // Call the service to update vendor status
+  const result = await userService.updateVendorStatus(vendorId, isDeleted);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: `Vendor ${isDeleted ? 'added to' : 'removed from'} blacklist successfully!`,
+    data: result,
+  });
+});
+
+
+
+
+
+
 export const userController = {
+
   createAdmin,
   createVendor,
   createCustomer,
@@ -221,6 +245,8 @@ export const userController = {
   updateCustomer,
   updateVendor,
   getAllFromDB,
-  deleteUser
+  deleteUser,
+  updateVendorStatus
+
 };
 

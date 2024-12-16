@@ -117,5 +117,11 @@ router.delete(
   userController.deleteUser,
 );
 
+router.patch(
+  '/update-vendor-status/:vendorId',  
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),     
+  userController.updateVendorStatus,  
+);
+
 
 export const UserRoutes = router;
