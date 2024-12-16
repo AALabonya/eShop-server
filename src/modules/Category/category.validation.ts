@@ -8,9 +8,6 @@ const createCategoryValidation = z.object({
     label: z.string({
       required_error: 'Category Label is required',
     }),
-    image: z.string({
-      required_error: 'Category image is required',
-    }),
   }),
 });
 
@@ -24,11 +21,6 @@ const updateCategoryValidation = z.object({
     label: z
       .string({
         required_error: 'Category Label is required',
-      })
-      .optional(),
-    image: z
-      .string({
-        required_error: 'Category image is required',
       })
       .optional(),
   }),

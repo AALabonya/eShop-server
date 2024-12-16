@@ -6,6 +6,8 @@ import config from '../../config';
 import { IAuthUser } from './user.interface';
 import { StatusCodes } from 'http-status-codes';
 import { Request, Response } from 'express';
+import pick from '../../utils/pick';
+import { userFilterableFields } from './user.constant';
 
 const createAdmin = catchAsync(async (req, res) => {
   const result = await userService.createAdmin(req.body);
@@ -66,21 +68,21 @@ const createCustomer = catchAsync(async (req, res) => {
   });
 });
 
-// const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
-//   // console.log(req.query)
-//   const filters = pick(req.query, userFilterableFields);
-//   const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
+  // console.log(req.query)
+  const filters = pick(req.query, userFilterableFields);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
 
-//   const result = await userService.getAllFromDB(filters, options);
+  const result = await userService.getAllFromDB(filters, options);
 
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'Users data fetched!',
-//     meta: result.meta,
-//     data: result.data,
-//   });
-// });
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Users data fetched!',
+    meta: result.meta,
+    data: result.data,
+  });
+});
 
 // const changeProfileStatus = catchAsync(async (req: Request, res: Response) => {
 //   const { id } = req.params;
@@ -203,5 +205,6 @@ export const userController = {
   unfollowVendor,
   updateCustomer,
   updateVendor,
+  getAllFromDB
 };
 

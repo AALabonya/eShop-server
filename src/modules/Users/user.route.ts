@@ -9,11 +9,11 @@ import { upload } from '../../config/multer.config';
 
 const router = express.Router();
 
-// router.get(
-//   '/',
-//   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-//   userController.getAllFromDB,
-// );
+router.get(
+  '/',
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  userController.getAllFromDB,
+);
 
 router.get(
   '/me',
@@ -95,12 +95,12 @@ router.patch(
 },
   userController.updateVendor,
 );
-// router.patch(
-//   '/:id/status',
-//   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-//   validateRequest(userValidation.updateStatus),
-//   userController.changeProfileStatus,
-// );
+router.patch(
+  '/:id/status',
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  validateRequest(userValidation.updateStatus),
+  userController.changeProfileStatus,
+);
 
 // router.patch(
 //   '/update-my-profile',

@@ -7,7 +7,9 @@ import { UserRole, UserStatus } from '@prisma/client';
 import { createToken } from '../../utils/verifyJWT';
 import { IAuthUser } from './user.interface';
 import { StatusCodes } from 'http-status-codes';
-import { fileUploader } from '../../utils/fileUploader';
+import { log } from 'node:console';
+import { loadavg } from 'node:os';
+
 
 const createAdmin = async (payload: {
   name: string;
@@ -47,7 +49,7 @@ const createAdmin = async (payload: {
         name: payload.name,
         email: user.email,
         image:
-          'https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/83221961/original/425127947f0688643bcefba40b83c767b13e2a6a/illustrate-your-cartoon-avatar.jpg',
+          'https://th.bing.com/th/id/R.3facbb5eefdada8df4a84ccb4815ed73?rik=IWiNlu9%2flgAnmg&pid=ImgRaw&r=0',
       },
     });
 
@@ -83,6 +85,10 @@ const createVendor = async (payload: {
   name: string;
   password: string;
   email: string;
+  role?: string;
+  shopName?: string;
+  logo?: string;
+  description?: string;
 }) => {
   // checking if the user is exist
   const user = await prisma.user.findUnique({
@@ -90,6 +96,7 @@ const createVendor = async (payload: {
       email: payload.email,
     },
   });
+console.log(user);
 
   if (user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'This user is already exist!');
@@ -188,7 +195,7 @@ const createCustomer = async (payload: {
         name: payload.name,
         email: user.email,
        image:
-          'https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/83221961/original/425127947f0688643bcefba40b83c767b13e2a6a/illustrate-your-cartoon-avatar.jpg',
+          'https://i.pinimg.com/originals/d9/4e/34/d94e34a2679cbfcc38c8d8d7a58b5503.jpg',
       },
     });
 
@@ -475,6 +482,40 @@ const updateVendor = async (
 
   return result;
 };
+const getAllFromDB = async (filters: any, options: any) => {
+  const { limit = 10, page = 1, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+
+  const where = {
+    ...filters, // Add the dynamic filters to the query
+  };
+
+  const users = await prisma.user.findMany({
+    where,
+    skip: (page - 1) * limit,  // Pagination: skip records for current page
+    take: limit,                // Limit the number of records returned
+    orderBy: {
+      [sortBy]: sortOrder,       // Sorting based on the provided field and order
+    },
+    include: {
+      admin: true,
+      vendor: true,
+      customer: true,
+    },
+  });
+
+  const totalUsers = await prisma.user.count({ where }); // Get the total count of users matching the filters
+
+  return {
+    data: users,
+    meta: {
+      total: totalUsers,
+      page,
+      limit,
+    },
+  };
+};
+
+
 
 export const userService = {
   createAdmin,
@@ -487,4 +528,5 @@ export const userService = {
   unfollowVendor,
   updateCustomer,
   updateVendor,
+  getAllFromDB, // Export the getAllUsers function
 };
