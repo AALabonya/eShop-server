@@ -1,10 +1,10 @@
-import express, { NextFunction, Request, Response } from 'express';
-import auth from '../../middlewares/auth';
 import { UserRole } from '@prisma/client';
+import express, { NextFunction, Request, Response } from 'express';
+import { upload } from '../../config/multer.config';
+import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { ProductController } from './product.controller';
 import { ProductValidation } from './product.validation';
-import { upload } from '../../config/multer.config';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.post(
     if (req.body.data) {
         req.body = JSON.parse(req.body.data);
     }
-    // console.log(req.body);
+    console.log(req.body,"body");
     
     next();
 },
@@ -27,12 +27,12 @@ router.post(
 
 router.get(
   '/:productId',
-  auth(
-    UserRole.VENDOR,
-    UserRole.SUPER_ADMIN,
-    UserRole.ADMIN,
-    UserRole.CUSTOMER,
-  ),
+  // auth(
+  //   UserRole.VENDOR,
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.ADMIN,
+  //   UserRole.CUSTOMER,
+  // ),
   ProductController.getSingleProduct,
 );
 
@@ -43,7 +43,7 @@ router.patch(
     if (req.body.data) {
         req.body = JSON.parse(req.body.data);
     }
-    // console.log(req.body);
+ 
     
     next();
 },
@@ -59,10 +59,9 @@ router.delete(
 );
 
 router.get('/', ProductController.getAllProducts);
+
 router.post(
   "/duplicate/:productId",
-  auth(UserRole.VENDOR),
-  validateRequest(ProductValidation.updateProductValidation),
   ProductController.duplicateProduct
 );
 export const ProductRoutes = router;

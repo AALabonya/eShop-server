@@ -1,14 +1,12 @@
 
+import { UserRole, UserStatus } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { StatusCodes } from 'http-status-codes';
+import config from '../../config';
 import AppError from '../../errors/appError';
 import prisma from '../../utils/prisma';
-import config from '../../config';
-import bcrypt from 'bcryptjs';
-import { UserRole, UserStatus } from '@prisma/client';
 import { createToken } from '../../utils/verifyJWT';
 import { IAuthUser } from './user.interface';
-import { StatusCodes } from 'http-status-codes';
-import { log } from 'node:console';
-import { loadavg } from 'node:os';
 
 interface SoftDeleteVendorParams {
   vendorId: string;

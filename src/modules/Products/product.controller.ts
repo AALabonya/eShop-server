@@ -87,9 +87,10 @@ const deleteProduct = catchAsync(async (req, res) => {
   });
 });
 const duplicateProduct = catchAsync(async (req, res) => {
-  const user = req.user!;
   const { productId } = req.params;
-  const product = await ProductServices.duplicateProduct(productId, user.id);
+
+  const product = await ProductServices.duplicateProduct(productId);
+// console.log(product,"product");
 
   sendResponse(res, {
     success: true,
